@@ -36,10 +36,6 @@ class _ApiKeyFormState extends State<ApiKeyForm> {
         ),
         actions: <Widget>[
           TextButton(
-            onPressed: () => Navigator.pop(context, 'Cancel'),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
             onPressed: () {
               if (_formKey.currentState!.validate()) {
                 widget.callback(controller.text);

@@ -64,6 +64,7 @@ class _HomeState extends State<Home> {
               tooltip: 'Set App Key',
               onPressed: () => showDialog<String>(
                   context: context,
+                  barrierDismissible: false,
                   builder: (BuildContext context) => ApiKeyForm(setupApiKey)),
             ),
           ],
