@@ -39,10 +39,9 @@ class _HomeState extends State<Home> {
   Queue<MessageData> responses = Queue<MessageData>();
   String apiKey = "";
 
-  void updateMessages(String data, bool fromClient) {
+  void updateMessages(String data, bool userInput) {
     setState(() {
-      responses
-          .addFirst(MessageData(mistralResponse: data, fromClient: fromClient));
+      responses.addFirst(MessageData(data: data, userInput: userInput));
     });
   }
 
@@ -76,23 +75,14 @@ class _HomeState extends State<Home> {
                   itemCount: responses.length,
                   reverse: true,
                   itemBuilder: (BuildContext context, int index) {
-                    if (!responses.elementAt(index).fromClient) {
-                      MistralResponse response = MistralResponse.fromJson(
-                          jsonDecode(
-                              responses.elementAt(index).mistralResponse));
-                      return MessageView(
-                          data: response.choices.first.message.content);
-                    } else {
-                      return MessageView(
-                          data: responses.elementAt(index).mistralResponse);
-                    }
+                    return MessageView(message: responses.elementAt(index));
                   }),
             ),
             Align(
                 alignment: Alignment.bottomCenter,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: MessageForm(updateMessages, apiKey),
+                  child: MessageForm(callback: updateMessages, apiKey: apiKey),
                 )),
           ],
         ));

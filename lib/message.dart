@@ -1,29 +1,43 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:jarvis/mistral.dart';
+import 'package:markdown_widget/markdown_widget.dart';
 
 class MessageData {
-  final bool fromClient;
-  final String mistralResponse;
+  final bool userInput;
+  final String data;
 
-  MessageData({required this.mistralResponse, required this.fromClient});
+  MessageData({required this.data, required this.userInput});
 }
 
 class MessageView extends StatelessWidget {
-  final String data;
-  const MessageView({required this.data, super.key});
+  final MessageData message;
+  const MessageView({required this.message, super.key});
 
   @override
   Widget build(BuildContext context) {
     return Align(
-      alignment: Alignment.centerLeft,
+      alignment:
+          message.userInput ? Alignment.centerRight : Alignment.centerLeft,
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.8,
         ),
         child: Card(
-          margin: const EdgeInsets.fromLTRB(16, 0, 32, 0),
+          margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            child: Text(data),
+            child: MarkdownBlock(
+              data: message.userInput
+                  ? message.data
+                  : MistralResponse.fromJson(jsonDecode(message.data))
+                      .choices
+                      .first
+                      .message
+                      .content,
+              selectable: true,
+            ),
           ),
         ),
       ),

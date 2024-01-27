@@ -5,7 +5,7 @@ class MessageForm extends StatefulWidget {
   final Function(String, bool) callback;
   final String apiKey;
 
-  const MessageForm(this.callback, this.apiKey, {super.key});
+  const MessageForm({required this.callback, required this.apiKey, super.key});
 
   @override
   State<MessageForm> createState() => _MessageFormState();
@@ -22,6 +22,21 @@ class _MessageFormState extends State<MessageForm> {
     super.dispose();
   }
 
+  void submit() {
+    if (_formKey.currentState!.validate()) {
+      final response = ask(messageController.text, widget.apiKey);
+      widget.callback(messageController.text, true);
+      messageController.clear();
+      response.then((value) {
+        widget.callback(value.body, false);
+      }).catchError(
+        (error) {
+          widget.callback(error, false);
+        },
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -31,10 +46,14 @@ class _MessageFormState extends State<MessageForm> {
           Expanded(
             child: TextFormField(
               controller: messageController,
-              decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
+              onFieldSubmitted: (_) => submit(),
+              decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
                   labelText: 'Enter a message',
-                  suffixIcon: Icon(Icons.clear)),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => messageController.clear(),
+                  )),
               validator: (String? value) {
                 if (value == null || value.isEmpty) {
                   return 'You forgot something';
@@ -44,22 +63,9 @@ class _MessageFormState extends State<MessageForm> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            padding: const EdgeInsets.all(16),
             child: ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  final response = ask(messageController.text, widget.apiKey);
-                  widget.callback(messageController.text, true);
-                  messageController.clear();
-                  response.then((value) {
-                    widget.callback(value.body, false);
-                  }).catchError(
-                    (error) {
-                      widget.callback(error, false);
-                    },
-                  );
-                }
-              },
+              onPressed: () => submit(),
               child: const Text('Submit'),
             ),
           ),
