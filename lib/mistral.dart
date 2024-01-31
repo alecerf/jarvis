@@ -81,7 +81,7 @@ Future<http.Response> ask(String message, apiKey) {
       'Authorization': 'Bearer $apiKey',
     },
     body: jsonEncode(<String, Object?>{
-      "model": "mistral-tiny",
+      "model": "mistral-medium",
       "messages": [
         {"role": "user", "content": message}
       ],
