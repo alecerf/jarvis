@@ -31,11 +31,13 @@ class MessageView extends StatelessWidget {
             child: MarkdownBlock(
               data: message.userInput
                   ? message.data
-                  : MistralResponse.fromJson(jsonDecode(message.data))
-                      .choices
-                      .first
-                      .message
-                      .content,
+                  : utf8.decode(
+                      MistralResponse.fromJson(jsonDecode(message.data))
+                          .choices
+                          .first
+                          .message
+                          .content
+                          .codeUnits),
               selectable: true,
             ),
           ),
