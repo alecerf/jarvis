@@ -58,6 +58,9 @@ class _MessageFormState extends State<MessageForm> {
                 if (value == null || value.isEmpty) {
                   return 'You forgot something';
                 }
+                if (widget.apiKey.isEmpty) {
+                  return 'No apikey';
+                }
                 return null;
               },
             ),
