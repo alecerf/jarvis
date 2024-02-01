@@ -1,35 +1,22 @@
 import 'package:flutter/material.dart';
 
-class ApiKeyForm extends StatefulWidget {
-  final Function(String) callback;
-
-  const ApiKeyForm(this.callback, {super.key});
-
-  @override
-  State<ApiKeyForm> createState() => _ApiKeyFormState();
-}
-
-class _ApiKeyFormState extends State<ApiKeyForm> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final controller = TextEditingController();
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
+class ApiKeyForm extends StatelessWidget {
+  const ApiKeyForm({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
     return Form(
-      key: _formKey,
+      key: formKey,
       child: AlertDialog(
-        title: const Text('Setup Mistral API Key'),
+        title: const Text('Mistral API key'),
         content: TextFormField(
           controller: controller,
           validator: (String? value) {
-            if (value == null || value.isEmpty) {
-              return 'You forgot something';
+            if (value == null || value.trim().isEmpty) {
+              return 'API key is required';
             }
             return null;
           },
@@ -37,13 +24,11 @@ class _ApiKeyFormState extends State<ApiKeyForm> {
         actions: <Widget>[
           TextButton(
             onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                widget.callback(controller.text);
-                controller.clear();
-                return Navigator.pop(context, 'Setup');
+              if (formKey.currentState!.validate()) {
+                return Navigator.pop(context, controller.text.trim());
               }
             },
-            child: const Text('Setup'),
+            child: const Text('Save'),
           ),
         ],
       ),

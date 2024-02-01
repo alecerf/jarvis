@@ -16,7 +16,6 @@ class Jarvis extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'J.A.R.V.I.S',
-      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
         useMaterial3: true,
@@ -43,10 +42,16 @@ class _HomeState extends State<Home> {
     });
   }
 
-  void setupApiKey(String data) {
-    setState(() {
-      apiKey = data;
-    });
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => showDialog<String>(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) => const ApiKeyForm(),
+      ).then((value) => apiKey = value ?? ""),
+    );
   }
 
   @override
@@ -55,16 +60,6 @@ class _HomeState extends State<Home> {
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
           title: const Text("J.A.R.V.I.S"),
-          actions: <Widget>[
-            IconButton(
-              icon: const Icon(Icons.key),
-              tooltip: 'Set App Key',
-              onPressed: () => showDialog<String>(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (BuildContext context) => ApiKeyForm(setupApiKey)),
-            ),
-          ],
         ),
         body: Column(
           children: [
