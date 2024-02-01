@@ -1,9 +1,10 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
-import 'package:jarvis/api_key_form.dart';
-import 'package:jarvis/message_form.dart';
-import 'package:jarvis/message.dart';
+import 'package:jarvis/api_key_form_widget.dart';
+import 'package:jarvis/api_key_widget.dart';
+import 'package:jarvis/message_form_widget.dart';
+import 'package:jarvis/message_widget.dart';
 
 void main() {
   runApp(const Jarvis());
@@ -15,7 +16,7 @@ class Jarvis extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'J.A.R.V.I.S',
+      title: 'Jarvis',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
         useMaterial3: true,
@@ -33,8 +34,8 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  Queue<MessageData> responses = Queue<MessageData>();
   String apiKey = "";
+  Queue<MessageData> responses = Queue<MessageData>();
 
   void updateMessages(String data, bool userInput) {
     setState(() {
@@ -49,8 +50,8 @@ class _HomeState extends State<Home> {
       (_) => showDialog<String>(
         context: context,
         barrierDismissible: false,
-        builder: (BuildContext context) => const ApiKeyForm(),
-      ).then((value) => apiKey = value ?? ""),
+        builder: (BuildContext context) => ApiKeyForm(),
+      ).then((value) => setState(() => apiKey = value ?? "")),
     );
   }
 
@@ -59,25 +60,29 @@ class _HomeState extends State<Home> {
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          title: const Text("J.A.R.V.I.S"),
+          title: const Text("Jarvis"),
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                  itemCount: responses.length,
-                  reverse: true,
-                  itemBuilder: (BuildContext context, int index) {
-                    return MessageView(message: responses.elementAt(index));
-                  }),
-            ),
-            Align(
+        body: ApiKeyWidget(
+          apiKey: apiKey,
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                    itemCount: responses.length,
+                    reverse: true,
+                    itemBuilder: (BuildContext context, int index) {
+                      return MessageView(message: responses.elementAt(index));
+                    }),
+              ),
+              Align(
                 alignment: Alignment.bottomCenter,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: MessageForm(callback: updateMessages, apiKey: apiKey),
-                )),
-          ],
+                  child: MessageForm(callback: updateMessages),
+                ),
+              ),
+            ],
+          ),
         ));
   }
 }
