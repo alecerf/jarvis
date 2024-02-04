@@ -12,10 +12,10 @@ class MessageForm extends StatelessWidget {
 
   void submit(BuildContext context) {
     if (_formKey.currentState!.validate()) {
-      callback(_messageController.text, true);
+      String message = _messageController.text;
       _messageController.clear();
-      ask(_messageController.text, ApiKeyWidget.of(context).apiKey)
-          .then((value) {
+      callback(message, true);
+      ask(message, ApiKeyWidget.of(context).apiKey).then((value) {
         callback(value.body, false);
       }).catchError(
         (error) {
