@@ -1,9 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:jarvis/api_key_widget.dart';
 import 'package:jarvis/mistral.dart';
 
 class MessageForm extends StatelessWidget {
-  final Function(String, bool) callback;
+  final Function(String?, String?, String) callback;
 
   MessageForm({required this.callback, super.key});
 
@@ -14,12 +16,30 @@ class MessageForm extends StatelessWidget {
     if (_formKey.currentState!.validate()) {
       String message = _messageController.text;
       _messageController.clear();
-      callback(message, true);
-      ask(message, ApiKeyWidget.of(context).apiKey).then((value) {
-        callback(value.body, false);
+      callback(message, null, UniqueKey().toString());
+      ask(message, ApiKeyWidget.of(context).apiKey).then((response) {
+        response.stream.listen((value) {
+          String response = utf8.decode(value);
+          int firstNewline;
+          while ((firstNewline = response.indexOf('\n')) != -1) {
+            String chunkLine = response.substring(0, firstNewline);
+            response = response.substring(firstNewline + 1);
+            if (chunkLine.startsWith('data:')) {
+              var json = chunkLine.substring(6).trim();
+              if (json != '[DONE]') {
+                MistralResponse response =
+                    MistralResponse.fromJson(jsonDecode(json));
+                callback(
+                    null,
+                    utf8.decode(response.choices.first.delta.content.codeUnits),
+                    response.id);
+              }
+            }
+          }
+        });
       }).catchError(
         (error) {
-          callback(error, false);
+          callback(error, null, UniqueKey().toString());
         },
       );
     }

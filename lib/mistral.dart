@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:fetch_client/fetch_client.dart';
 import 'package:http/http.dart' as http;
 
 class Usage {
@@ -18,32 +19,32 @@ class Usage {
   }
 }
 
-class Message {
-  final String role;
+class Delta {
+  final String? role;
   final String content;
 
-  Message(this.role, this.content);
+  Delta({this.role, required this.content});
 
-  factory Message.fromJson(Map<String, dynamic> json) {
-    return Message(
-      json['role'],
-      json['content'],
+  factory Delta.fromJson(Map<String, dynamic> json) {
+    return Delta(
+      role: json['role'] as String?,
+      content: json['content'],
     );
   }
 }
 
 class Choice {
   final int index;
-  final Message message;
-  final String finishReason;
+  final Delta delta;
+  final String? finishReason;
 
-  Choice(this.index, this.message, this.finishReason);
+  Choice({required this.index, required this.delta, this.finishReason});
 
   factory Choice.fromJson(Map<String, dynamic> json) {
     return Choice(
-      json['index'],
-      Message.fromJson(json['message']),
-      json['finish_reason'],
+      index: json['index'],
+      delta: Delta.fromJson(json['delta']),
+      finishReason: json['finish_reason'] as String?,
     );
   }
 }
@@ -55,36 +56,42 @@ class MistralResponse {
   final String model;
 
   final List<Choice> choices;
-  final Usage usage;
+  final Usage? usage;
 
-  MistralResponse(
-      this.id, this.object, this.created, this.model, this.choices, this.usage);
+  MistralResponse({
+    required this.id,
+    required this.object,
+    required this.created,
+    required this.model,
+    required this.choices,
+    this.usage,
+  });
 
   factory MistralResponse.fromJson(Map<String, dynamic> json) {
     return MistralResponse(
-      json['id'],
-      json['object'],
-      json['created'],
-      json['model'],
-      (json['choices'] as List).map((i) => Choice.fromJson(i)).toList(),
-      Usage.fromJson(json['usage']),
+      id: json['id'],
+      object: json['object'],
+      created: json['created'],
+      model: json['model'],
+      choices:
+          (json['choices'] as List).map((i) => Choice.fromJson(i)).toList(),
+      usage: json['usage'] == Null ? Usage.fromJson(json['usage']) : null,
     );
   }
 }
 
-Future<http.Response> ask(String message, apiKey) {
-  return http.post(
-    Uri.parse('https://api.mistral.ai/v1/chat/completions'),
-    headers: <String, String>{
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $apiKey',
-    },
-    body: jsonEncode(<String, Object?>{
+Future<http.StreamedResponse> ask(String message, apiKey) {
+  var request = http.StreamedRequest(
+      'POST', Uri.parse('https://api.mistral.ai/v1/chat/completions'))
+    ..headers['Content-Type'] = 'application/json'
+    ..headers['Authorization'] = 'Bearer $apiKey'
+    ..sink.add(utf8.encode(jsonEncode(<String, Object?>{
+      "stream": true,
       "model": "mistral-tiny",
       "messages": [
         {"role": "user", "content": message}
       ],
-    }),
-  );
+    })))
+    ..sink.close();
+  return FetchClient(mode: RequestMode.cors).send(request);
 }
