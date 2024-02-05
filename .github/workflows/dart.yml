@@ -1,0 +1,21 @@
+name: Dart
+
+on:
+  push:
+    branches: [ "trunk" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Install Flutter"
+        run: |
+          cd $HOME
+          git clone https://github.com/flutter/flutter.git --depth 1 --branch 3.16.9
+          echo "$HOME/flutter/bin" >> $GITHUB_PATH
+          cd $GITHUB_WORKSPACE
+      - name: "Checkout"
+        uses: actions/checkout@v4
+      - name: "Build Flutter web app"
+        run: |
+          make build
