@@ -15,6 +15,10 @@ git clone https://github.com/alecerf/jarvis.git
 make run
 ```
 
+## How to use
+
+To use Jarvis, simply obtain a [Mistral API key](https://console.mistral.ai/user/api-keys/).
+
 ## Contributing
 
 Contributions are always welcome!
