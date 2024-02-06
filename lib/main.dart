@@ -1,10 +1,9 @@
-import 'dart:collection';
-
 import 'package:flutter/material.dart';
 import 'package:jarvis/api_key_form_widget.dart';
 import 'package:jarvis/api_key_widget.dart';
 import 'package:jarvis/message_form_widget.dart';
 import 'package:jarvis/message_widget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const Jarvis());
@@ -34,16 +33,17 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  String apiKey = "";
-  Map<String, MessageData> responses = <String, MessageData>{};
+  String _apiKey = "";
+  final Map<String, MessageData> _responses = <String, MessageData>{};
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   void updateMessages(String? userInput, String? response, String id) {
     setState(() {
-      responses.update(
+      _responses.update(
         id,
         (value) {
-          responses[id]!.response = responses[id]!.response! + response!;
-          return responses[id]!;
+          _responses[id]!.response = _responses[id]!.response! + response!;
+          return _responses[id]!;
         },
         ifAbsent: () {
           return MessageData(userInput: userInput, response: response);
@@ -55,18 +55,28 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
-    if (apiKey.isNotEmpty) {
-      return;
-    }
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => showDialog<String>(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) => ApiKeyForm(),
-      ).then(
-        (value) => setState(() => apiKey = value ?? ""),
-      ),
-    );
+    _prefs.then((SharedPreferences prefs) {
+      _apiKey = prefs.getString('key') ?? "";
+      if (_apiKey.isNotEmpty) {
+        setState(() {});
+        return;
+      }
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => showDialog<String>(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) => ApiKeyForm(),
+        ).then(
+          (value) => setState(() {
+            prefs.setString('key', value!).then((bool success) {
+              if (success) {
+                _apiKey = value;
+              }
+            });
+          }),
+        ),
+      );
+    });
   }
 
   @override
@@ -77,17 +87,17 @@ class _HomeState extends State<Home> {
         title: const Text("Jarvis"),
       ),
       body: ApiKeyWidget(
-        apiKey: apiKey,
+        apiKey: _apiKey,
         child: Column(
           children: [
             Expanded(
               child: ListView.builder(
-                  itemCount: responses.length,
+                  itemCount: _responses.length,
                   reverse: true,
                   itemBuilder: (BuildContext context, int index) {
                     return MessageView(
-                      message: responses.values
-                          .elementAt(responses.values.length - index - 1),
+                      message: _responses.values
+                          .elementAt(_responses.values.length - index - 1),
                     );
                   }),
             ),
