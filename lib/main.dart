@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis/api_key_form_widget.dart';
 import 'package:jarvis/api_key_widget.dart';
 import 'package:jarvis/message_form_widget.dart';
 import 'package:jarvis/message_widget.dart';
+import 'package:jarvis/settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -52,31 +52,26 @@ class _HomeState extends State<Home> {
     });
   }
 
-  @override
-  void initState() {
-    super.initState();
+  void loadConfiguration() {
     _prefs.then((SharedPreferences prefs) {
       _apiKey = prefs.getString('key') ?? "";
       if (_apiKey.isNotEmpty) {
         setState(() {});
         return;
       }
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => showDialog<String>(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) => ApiKeyForm(),
-        ).then(
-          (value) => setState(() {
-            prefs.setString('key', value!).then((bool success) {
-              if (success) {
-                _apiKey = value;
-              }
-            });
-          }),
-        ),
-      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const Settings()),
+      ).then((value) {
+        loadConfiguration();
+      });
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadConfiguration();
   }
 
   @override
@@ -85,6 +80,20 @@ class _HomeState extends State<Home> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text("Jarvis"),
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Change settings',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const Settings()),
+              ).then((value) {
+                loadConfiguration();
+              });
+            },
+          ),
+        ],
       ),
       body: ApiKeyWidget(
         apiKey: _apiKey,

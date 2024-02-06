@@ -18,12 +18,11 @@ class MessageForm extends StatelessWidget {
       _messageController.clear();
       callback(message, null, UniqueKey().toString());
       ask(message, ApiKeyWidget.of(context).apiKey).then((response) {
-        response.stream.listen((value) {
-          String response = utf8.decode(value);
+        response.stream.transform(utf8.decoder).listen((value) {
           int firstNewline;
-          while ((firstNewline = response.indexOf('\n')) != -1) {
-            String chunkLine = response.substring(0, firstNewline);
-            response = response.substring(firstNewline + 1);
+          while ((firstNewline = value.indexOf('\n')) != -1) {
+            String chunkLine = value.substring(0, firstNewline);
+            value = value.substring(firstNewline + 1);
             if (chunkLine.startsWith('data:')) {
               var json = chunkLine.substring(6).trim();
               if (json != '[DONE]') {
@@ -69,13 +68,6 @@ class MessageForm extends StatelessWidget {
                 }
                 return null;
               },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: ElevatedButton(
-              onPressed: () => submit(context),
-              child: const Text('Submit'),
             ),
           ),
         ],
