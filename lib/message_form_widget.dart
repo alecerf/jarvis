@@ -1,13 +1,21 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:jarvis/message_widget.dart';
 import 'package:jarvis/mistral.dart';
 import 'package:jarvis/settings.dart';
 
 class MessageForm extends StatelessWidget {
-  final Function(String?, String?, String) callback;
+  final Function(MessageData, String) callback;
+  final Function() cleanCallback;
+  final Iterable<MessageData> history;
 
-  MessageForm({required this.callback, super.key});
+  MessageForm({
+    super.key,
+    required this.callback,
+    required this.cleanCallback,
+    required this.history,
+  });
 
   final _formKey = GlobalKey<FormState>();
   final _messageController = TextEditingController();
@@ -16,13 +24,15 @@ class MessageForm extends StatelessWidget {
     if (_formKey.currentState!.validate()) {
       String content = _messageController.text;
       _messageController.clear();
-      callback(content, null, UniqueKey().toString());
+      callback(
+        MessageData(role: Role.user, content: content),
+        UniqueKey().toString(),
+      );
       MistralQuery query = MistralQuery(
         apiKey: SettingsDataWidget.of(context).apiKey,
         model: SettingsDataWidget.of(context).model,
-        content: content,
       );
-      ask(query).then((response) {
+      ask(query, history).then((response) {
         response.stream.transform(utf8.decoder).listen((value) {
           int firstNewline;
           while ((firstNewline = value.indexOf('\n')) != -1) {
@@ -34,18 +44,17 @@ class MessageForm extends StatelessWidget {
                 MistralResponse response =
                     MistralResponse.fromJson(jsonDecode(json));
                 callback(
-                    null,
-                    utf8.decode(response.choices.first.delta.content.codeUnits),
-                    response.id);
+                  MessageData(
+                      role: Role.assistant,
+                      content: utf8.decode(
+                          response.choices.first.delta.content.codeUnits)),
+                  response.id,
+                );
               }
             }
           }
         });
-      }).catchError(
-        (error) {
-          callback(error, null, UniqueKey().toString());
-        },
-      );
+      });
     }
   }
 
@@ -53,29 +62,40 @@ class MessageForm extends StatelessWidget {
   Widget build(BuildContext context) {
     return Form(
       key: _formKey,
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            child: TextFormField(
-              controller: _messageController,
-              onFieldSubmitted: (_) => submit(context),
-              decoration: InputDecoration(
-                border: const OutlineInputBorder(),
-                labelText: 'Enter your message',
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => _messageController.clear(),
-                ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: FloatingActionButton.extended(
+                onPressed: () => cleanCallback(),
+                label: const Icon(Icons.cleaning_services),
+                shape: const CircleBorder(),
               ),
-              validator: (String? value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Message is required';
-                }
-                return null;
-              },
             ),
-          ),
-        ],
+            Expanded(
+              child: TextFormField(
+                controller: _messageController,
+                onFieldSubmitted: (_) => submit(context),
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  labelText: 'Enter your message',
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => _messageController.clear(),
+                  ),
+                ),
+                validator: (String? value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Message is required';
+                  }
+                  return null;
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

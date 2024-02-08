@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jarvis/message_form_widget.dart';
 import 'package:jarvis/message_widget.dart';
+import 'package:jarvis/mistral.dart';
 import 'package:jarvis/settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -34,21 +35,27 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   String _apiKey = "";
   String _model = "";
-  final Map<String, MessageData> _responses = <String, MessageData>{};
+  final Map<String, MessageData> _history = <String, MessageData>{};
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
-  void updateMessages(String? userInput, String? response, String id) {
+  void updateMessages(MessageData data, String id) {
     setState(() {
-      _responses.update(
+      _history.update(
         id,
         (value) {
-          _responses[id]!.response = _responses[id]!.response! + response!;
-          return _responses[id]!;
+          _history[id]!.content = _history[id]!.content + data.content;
+          return _history[id]!;
         },
         ifAbsent: () {
-          return MessageData(userInput: userInput, response: response);
+          return data;
         },
       );
+    });
+  }
+
+  void clean() {
+    setState(() {
+      _history.clear();
     });
   }
 
@@ -103,12 +110,12 @@ class _HomeState extends State<Home> {
           children: [
             Expanded(
               child: ListView.builder(
-                  itemCount: _responses.length,
+                  itemCount: _history.length,
                   reverse: true,
                   itemBuilder: (BuildContext context, int index) {
                     return MessageView(
-                      message: _responses.values
-                          .elementAt(_responses.values.length - index - 1),
+                      message: _history.values
+                          .elementAt(_history.values.length - index - 1),
                     );
                   }),
             ),
@@ -116,7 +123,11 @@ class _HomeState extends State<Home> {
               alignment: Alignment.bottomCenter,
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: MessageForm(callback: updateMessages),
+                child: MessageForm(
+                  callback: updateMessages,
+                  cleanCallback: clean,
+                  history: _history.values,
+                ),
               ),
             ),
           ],

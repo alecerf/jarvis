@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:fetch_client/fetch_client.dart';
 import 'package:http/http.dart' as http;
+import 'package:jarvis/message_widget.dart';
 
 class Usage {
   final int promptTokens;
@@ -83,13 +84,16 @@ class MistralResponse {
 class MistralQuery {
   final String apiKey;
   final String model;
-  final String content;
 
-  MistralQuery(
-      {required this.apiKey, required this.model, required this.content});
+  MistralQuery({required this.apiKey, required this.model});
 }
 
-Future<http.StreamedResponse> ask(MistralQuery query) {
+enum Model { tiny, small, medium }
+
+enum Role { system, user, assistant }
+
+Future<http.StreamedResponse> ask(
+    MistralQuery query, Iterable<MessageData> history) {
   var request = http.StreamedRequest(
       'POST', Uri.parse('https://api.mistral.ai/v1/chat/completions'))
     ..headers['Content-Type'] = 'application/json'
@@ -97,9 +101,9 @@ Future<http.StreamedResponse> ask(MistralQuery query) {
     ..sink.add(utf8.encode(jsonEncode(<String, Object?>{
       "stream": true,
       "model": "mistral-${query.model}",
-      "messages": [
-        {"role": "user", "content": query.content}
-      ],
+      "messages": history
+          .map((e) => {"role": e.role.name, "content": e.content})
+          .toList(),
     })))
     ..sink.close();
   return FetchClient(mode: RequestMode.cors).send(request);

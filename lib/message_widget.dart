@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:jarvis/mistral.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 
 class MessageData {
-  String? userInput;
-  String? response;
+  final Role role;
+  String content;
 
-  MessageData({this.userInput, this.response});
+  MessageData({required this.role, required this.content});
 }
 
 class MessageView extends StatelessWidget {
@@ -15,7 +16,7 @@ class MessageView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Align(
-      alignment: message.userInput != null
+      alignment: message.role == Role.user
           ? Alignment.centerRight
           : Alignment.centerLeft,
       child: ConstrainedBox(
@@ -27,7 +28,7 @@ class MessageView extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             child: MarkdownBlock(
-              data: message.userInput ?? message.response!,
+              data: message.content,
               selectable: true,
             ),
           ),

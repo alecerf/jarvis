@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jarvis/mistral.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsDataWidget extends InheritedWidget {
@@ -21,8 +22,6 @@ class SettingsDataWidget extends InheritedWidget {
     return context.dependOnInheritedWidgetOfExactType<SettingsDataWidget>()!;
   }
 }
-
-enum Model { tiny, small, medium }
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
