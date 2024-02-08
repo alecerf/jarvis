@@ -1,6 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+class SettingsDataWidget extends InheritedWidget {
+  final String apiKey;
+  final String model;
+
+  const SettingsDataWidget({
+    super.key,
+    required this.apiKey,
+    required this.model,
+    required super.child,
+  });
+
+  @override
+  bool updateShouldNotify(SettingsDataWidget oldWidget) {
+    return apiKey != oldWidget.apiKey;
+  }
+
+  static SettingsDataWidget of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<SettingsDataWidget>()!;
+  }
+}
+
+enum Model { tiny, small, medium }
+
 class Settings extends StatefulWidget {
   const Settings({super.key});
 
@@ -13,12 +36,15 @@ class _SettingsState extends State<Settings> {
   final _controller = TextEditingController();
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   late ScaffoldMessengerState snackbar;
+  Model? _model = Model.tiny;
 
   @override
   void initState() {
     super.initState();
     _prefs.then((SharedPreferences prefs) {
       _controller.text = prefs.getString('key') ?? "";
+      _model = Model.values.firstWhere(
+          (element) => element.name == (prefs.getString('model') ?? 'tiny'));
       setState(() {});
     });
   }
@@ -57,6 +83,58 @@ class _SettingsState extends State<Settings> {
                   return null;
                 },
               ),
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Divider(),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: Text('Models',
+                        style: TextStyle(
+                          fontSize: 18,
+                        )),
+                  ),
+                  ListTile(
+                    title: const Text('Tiny'),
+                    leading: Radio<Model>(
+                      value: Model.tiny,
+                      groupValue: _model,
+                      onChanged: (Model? value) {
+                        setState(() {
+                          _model = value;
+                        });
+                      },
+                    ),
+                  ),
+                  ListTile(
+                    title: const Text('Small'),
+                    leading: Radio<Model>(
+                      value: Model.small,
+                      groupValue: _model,
+                      onChanged: (Model? value) {
+                        setState(() {
+                          _model = value;
+                        });
+                      },
+                    ),
+                  ),
+                  ListTile(
+                    title: const Text('Medium'),
+                    leading: Radio<Model>(
+                      value: Model.medium,
+                      groupValue: _model,
+                      onChanged: (Model? value) {
+                        setState(() {
+                          _model = value;
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
               Padding(
                 padding: const EdgeInsets.only(top: 16),
                 child: ElevatedButton(
@@ -64,6 +142,7 @@ class _SettingsState extends State<Settings> {
                     if (_formKey.currentState!.validate()) {
                       _prefs.then((SharedPreferences prefs) {
                         prefs.setString('key', _controller.text);
+                        prefs.setString('model', _model!.name);
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Your settings have been saved'),

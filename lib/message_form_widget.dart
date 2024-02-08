@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:jarvis/api_key_widget.dart';
 import 'package:jarvis/mistral.dart';
+import 'package:jarvis/settings.dart';
 
 class MessageForm extends StatelessWidget {
   final Function(String?, String?, String) callback;
@@ -14,10 +14,15 @@ class MessageForm extends StatelessWidget {
 
   void submit(BuildContext context) {
     if (_formKey.currentState!.validate()) {
-      String message = _messageController.text;
+      String content = _messageController.text;
       _messageController.clear();
-      callback(message, null, UniqueKey().toString());
-      ask(message, ApiKeyWidget.of(context).apiKey).then((response) {
+      callback(content, null, UniqueKey().toString());
+      MistralQuery query = MistralQuery(
+        apiKey: SettingsDataWidget.of(context).apiKey,
+        model: SettingsDataWidget.of(context).model,
+        content: content,
+      );
+      ask(query).then((response) {
         response.stream.transform(utf8.decoder).listen((value) {
           int firstNewline;
           while ((firstNewline = value.indexOf('\n')) != -1) {

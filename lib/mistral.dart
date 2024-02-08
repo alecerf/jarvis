@@ -80,16 +80,25 @@ class MistralResponse {
   }
 }
 
-Future<http.StreamedResponse> ask(String message, apiKey) {
+class MistralQuery {
+  final String apiKey;
+  final String model;
+  final String content;
+
+  MistralQuery(
+      {required this.apiKey, required this.model, required this.content});
+}
+
+Future<http.StreamedResponse> ask(MistralQuery query) {
   var request = http.StreamedRequest(
       'POST', Uri.parse('https://api.mistral.ai/v1/chat/completions'))
     ..headers['Content-Type'] = 'application/json'
-    ..headers['Authorization'] = 'Bearer $apiKey'
+    ..headers['Authorization'] = 'Bearer ${query.apiKey}'
     ..sink.add(utf8.encode(jsonEncode(<String, Object?>{
       "stream": true,
-      "model": "mistral-tiny",
+      "model": "mistral-${query.model}",
       "messages": [
-        {"role": "user", "content": message}
+        {"role": "user", "content": query.content}
       ],
     })))
     ..sink.close();

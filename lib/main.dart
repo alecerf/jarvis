@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis/api_key_widget.dart';
 import 'package:jarvis/message_form_widget.dart';
 import 'package:jarvis/message_widget.dart';
 import 'package:jarvis/settings.dart';
@@ -34,6 +33,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   String _apiKey = "";
+  String _model = "";
   final Map<String, MessageData> _responses = <String, MessageData>{};
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
@@ -55,6 +55,7 @@ class _HomeState extends State<Home> {
   void loadConfiguration() {
     _prefs.then((SharedPreferences prefs) {
       _apiKey = prefs.getString('key') ?? "";
+      _model = prefs.getString('model') ?? Model.tiny.name;
       if (_apiKey.isNotEmpty) {
         setState(() {});
         return;
@@ -95,8 +96,9 @@ class _HomeState extends State<Home> {
           ),
         ],
       ),
-      body: ApiKeyWidget(
+      body: SettingsDataWidget(
         apiKey: _apiKey,
+        model: _model,
         child: Column(
           children: [
             Expanded(
