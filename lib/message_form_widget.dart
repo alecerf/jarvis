@@ -31,6 +31,8 @@ class MessageForm extends StatelessWidget {
       MistralQuery query = MistralQuery(
         apiKey: SettingsDataWidget.of(context).apiKey,
         model: SettingsDataWidget.of(context).model,
+        temperature: SettingsDataWidget.of(context).temperature,
+        topp: SettingsDataWidget.of(context).topp,
       );
       ask(query, history).then((response) {
         response.stream.transform(utf8.decoder).listen((value) {

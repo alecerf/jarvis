@@ -84,8 +84,15 @@ class MistralResponse {
 class MistralQuery {
   final String apiKey;
   final String model;
+  final double temperature;
+  final double topp;
 
-  MistralQuery({required this.apiKey, required this.model});
+  MistralQuery({
+    required this.temperature,
+    required this.topp,
+    required this.apiKey,
+    required this.model,
+  });
 }
 
 enum Model { tiny, small, medium }
@@ -100,6 +107,8 @@ Future<http.StreamedResponse> ask(
     ..headers['Authorization'] = 'Bearer ${query.apiKey}'
     ..sink.add(utf8.encode(jsonEncode(<String, Object?>{
       "stream": true,
+      "temperature": query.temperature,
+      "top_p": query.topp,
       "model": "mistral-${query.model}",
       "messages": history
           .map((e) => {"role": e.role.name, "content": e.content})

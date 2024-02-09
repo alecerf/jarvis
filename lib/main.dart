@@ -35,6 +35,10 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   String _apiKey = "";
   String _model = "";
+
+  double _temperature = 0;
+  double _topp = 0;
+
   final Map<String, MessageData> _history = <String, MessageData>{};
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
@@ -62,6 +66,8 @@ class _HomeState extends State<Home> {
   void loadConfiguration() {
     _prefs.then((SharedPreferences prefs) {
       _apiKey = prefs.getString('key') ?? "";
+      _temperature = prefs.getDouble('temperature') ?? 0.7;
+      _topp = prefs.getDouble('top_p') ?? 1;
       _model = prefs.getString('model') ?? Model.tiny.name;
       if (_apiKey.isNotEmpty) {
         setState(() {});
@@ -106,6 +112,8 @@ class _HomeState extends State<Home> {
       body: SettingsDataWidget(
         apiKey: _apiKey,
         model: _model,
+        temperature: _temperature,
+        topp: _topp,
         child: Column(
           children: [
             Expanded(
