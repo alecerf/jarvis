@@ -45,9 +45,9 @@ class MessageForm extends StatelessWidget {
                     MistralResponse.fromJson(jsonDecode(json));
                 callback(
                   MessageData(
-                      role: Role.assistant,
-                      content: utf8.decode(
-                          response.choices.first.delta.content.codeUnits)),
+                    role: Role.assistant,
+                    content: response.choices.first.delta.content,
+                  ),
                   response.id,
                 );
               }
