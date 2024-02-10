@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:jarvis/mistral.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class SettingsDataWidget extends InheritedWidget {
+import 'package:jarvis/mistral.dart';
+
+class SettingsData extends InheritedWidget {
   final String apiKey;
   final String model;
   final double temperature;
   final double topp;
 
-  const SettingsDataWidget({
+  const SettingsData({
     super.key,
     required this.apiKey,
     required this.model,
@@ -19,23 +20,23 @@ class SettingsDataWidget extends InheritedWidget {
   });
 
   @override
-  bool updateShouldNotify(SettingsDataWidget oldWidget) {
+  bool updateShouldNotify(SettingsData oldWidget) {
     return apiKey != oldWidget.apiKey;
   }
 
-  static SettingsDataWidget of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<SettingsDataWidget>()!;
+  static SettingsData of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<SettingsData>()!;
   }
 }
 
-class Settings extends StatefulWidget {
-  const Settings({super.key});
+class SettingsView extends StatefulWidget {
+  const SettingsView({super.key});
 
   @override
-  State<Settings> createState() => _SettingsState();
+  State<SettingsView> createState() => _SettingsViewState();
 }
 
-class _SettingsState extends State<Settings> {
+class _SettingsViewState extends State<SettingsView> {
   final _formKey = GlobalKey<FormState>();
   final _apiKeyController = TextEditingController();
   final _temperatureController = TextEditingController();

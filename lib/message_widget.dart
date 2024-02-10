@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis/mistral.dart';
 import 'package:markdown_widget/markdown_widget.dart';
+
+import 'package:jarvis/mistral.dart';
 
 class MessageData {
   final Role role;

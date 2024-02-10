@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+
 import 'package:jarvis/message_widget.dart';
 import 'package:jarvis/mistral.dart';
-import 'package:jarvis/settings.dart';
 
 class MessageForm extends StatelessWidget {
   final Function(MessageData, String) callback;
@@ -28,13 +28,7 @@ class MessageForm extends StatelessWidget {
         MessageData(role: Role.user, content: content),
         UniqueKey().toString(),
       );
-      MistralQuery query = MistralQuery(
-        apiKey: SettingsDataWidget.of(context).apiKey,
-        model: SettingsDataWidget.of(context).model,
-        temperature: SettingsDataWidget.of(context).temperature,
-        topp: SettingsDataWidget.of(context).topp,
-      );
-      ask(query, history).then((response) {
+      ask(context, history).then((response) {
         response.stream.transform(utf8.decoder).listen((value) {
           int firstNewline;
           while ((firstNewline = value.indexOf('\n')) != -1) {

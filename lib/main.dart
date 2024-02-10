@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:jarvis/message_form_widget.dart';
 import 'package:jarvis/message_widget.dart';
 import 'package:jarvis/mistral.dart';
 import 'package:jarvis/settings.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const Jarvis());
@@ -75,7 +76,7 @@ class _HomeState extends State<Home> {
       }
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const Settings()),
+        MaterialPageRoute(builder: (context) => const SettingsView()),
       ).then((value) {
         loadConfiguration();
       });
@@ -101,7 +102,7 @@ class _HomeState extends State<Home> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const Settings()),
+                MaterialPageRoute(builder: (context) => const SettingsView()),
               ).then((value) {
                 loadConfiguration();
               });
@@ -109,7 +110,7 @@ class _HomeState extends State<Home> {
           ),
         ],
       ),
-      body: SettingsDataWidget(
+      body: SettingsData(
         apiKey: _apiKey,
         model: _model,
         temperature: _temperature,

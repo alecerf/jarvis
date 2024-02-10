@@ -1,8 +1,11 @@
 import 'dart:convert';
 
 import 'package:fetch_client/fetch_client.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+
 import 'package:jarvis/message_widget.dart';
+import 'package:jarvis/settings.dart';
 
 class Usage {
   final int promptTokens;
@@ -81,35 +84,21 @@ class MistralResponse {
   }
 }
 
-class MistralQuery {
-  final String apiKey;
-  final String model;
-  final double temperature;
-  final double topp;
-
-  MistralQuery({
-    required this.temperature,
-    required this.topp,
-    required this.apiKey,
-    required this.model,
-  });
-}
-
 enum Model { tiny, small, medium }
 
 enum Role { system, user, assistant }
 
 Future<http.StreamedResponse> ask(
-    MistralQuery query, Iterable<MessageData> history) {
+    BuildContext context, Iterable<MessageData> history) {
   var request = http.StreamedRequest(
       'POST', Uri.parse('https://api.mistral.ai/v1/chat/completions'))
     ..headers['Content-Type'] = 'application/json'
-    ..headers['Authorization'] = 'Bearer ${query.apiKey}'
+    ..headers['Authorization'] = 'Bearer ${SettingsData.of(context).apiKey}'
     ..sink.add(utf8.encode(jsonEncode(<String, Object?>{
       "stream": true,
-      "temperature": query.temperature,
-      "top_p": query.topp,
-      "model": "mistral-${query.model}",
+      "temperature": SettingsData.of(context).temperature,
+      "top_p": SettingsData.of(context).topp,
+      "model": "mistral-${SettingsData.of(context).model}",
       "messages": history
           .map((e) => {"role": e.role.name, "content": e.content})
           .toList(),
