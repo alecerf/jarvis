@@ -90,19 +90,27 @@ enum Role { system, user, assistant }
 
 Future<http.StreamedResponse> ask(
     BuildContext context, Iterable<MessageData> history) {
+  var body = <String, Object?>{
+    "model": "mistral-${SettingsData.of(context).model}",
+    "messages": history
+        .map((e) => {"role": e.role.name, "content": e.content})
+        .toList(),
+    "temperature": SettingsData.of(context).temperature,
+    "top_p": SettingsData.of(context).topp,
+    "stream": true,
+    "safe_prompt": SettingsData.of(context).safePrompt,
+  };
+  if (SettingsData.of(context).maxTokens != null) {
+    body['max_tokens'] = SettingsData.of(context).maxTokens;
+  }
+  if (SettingsData.of(context).randomSeed != null) {
+    body['random_seed'] = SettingsData.of(context).randomSeed;
+  }
   var request = http.StreamedRequest(
       'POST', Uri.parse('https://api.mistral.ai/v1/chat/completions'))
     ..headers['Content-Type'] = 'application/json'
     ..headers['Authorization'] = 'Bearer ${SettingsData.of(context).apiKey}'
-    ..sink.add(utf8.encode(jsonEncode(<String, Object?>{
-      "stream": true,
-      "temperature": SettingsData.of(context).temperature,
-      "top_p": SettingsData.of(context).topp,
-      "model": "mistral-${SettingsData.of(context).model}",
-      "messages": history
-          .map((e) => {"role": e.role.name, "content": e.content})
-          .toList(),
-    })))
+    ..sink.add(utf8.encode(jsonEncode(body)))
     ..sink.close();
   return FetchClient(mode: RequestMode.cors).send(request);
 }

@@ -40,6 +40,11 @@ class _HomeState extends State<Home> {
   double _temperature = 0;
   double _topp = 0;
 
+  int? _maxTokens;
+  int? _randomSeed;
+
+  bool _safePrompt = false;
+
   final Map<String, MessageData> _history = <String, MessageData>{};
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
@@ -67,9 +72,12 @@ class _HomeState extends State<Home> {
   void loadConfiguration() {
     _prefs.then((SharedPreferences prefs) {
       _apiKey = prefs.getString('key') ?? "";
+      _model = prefs.getString('model') ?? Model.tiny.name;
       _temperature = prefs.getDouble('temperature') ?? 0.7;
       _topp = prefs.getDouble('top_p') ?? 1;
-      _model = prefs.getString('model') ?? Model.tiny.name;
+      _maxTokens = prefs.getInt('max_tokens');
+      _safePrompt = prefs.getBool('safe_prompt') ?? false;
+      _randomSeed = prefs.getInt('random_seed');
       if (_apiKey.isNotEmpty) {
         setState(() {});
         return;
@@ -115,6 +123,9 @@ class _HomeState extends State<Home> {
         model: _model,
         temperature: _temperature,
         topp: _topp,
+        maxTokens: _maxTokens,
+        safePrompt: _safePrompt,
+        randomSeed: _randomSeed,
         child: Column(
           children: [
             Expanded(

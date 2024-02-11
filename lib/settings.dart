@@ -7,21 +7,36 @@ import 'package:jarvis/mistral.dart';
 class SettingsData extends InheritedWidget {
   final String apiKey;
   final String model;
+
   final double temperature;
   final double topp;
 
+  final int? maxTokens;
+  final int? randomSeed;
+
+  final bool safePrompt;
+
   const SettingsData({
     super.key,
+    required super.child,
+    required this.maxTokens,
+    required this.randomSeed,
+    required this.safePrompt,
     required this.apiKey,
     required this.model,
     required this.temperature,
     required this.topp,
-    required super.child,
   });
 
   @override
   bool updateShouldNotify(SettingsData oldWidget) {
-    return apiKey != oldWidget.apiKey;
+    return apiKey != oldWidget.apiKey ||
+        model != oldWidget.model ||
+        temperature != oldWidget.temperature ||
+        topp != oldWidget.topp ||
+        maxTokens != oldWidget.maxTokens ||
+        randomSeed != oldWidget.randomSeed ||
+        safePrompt != oldWidget.safePrompt;
   }
 
   static SettingsData of(BuildContext context) {
@@ -41,20 +56,26 @@ class _SettingsViewState extends State<SettingsView> {
   final _apiKeyController = TextEditingController();
   final _temperatureController = TextEditingController();
   final _toppController = TextEditingController();
+  final _maxTokensController = TextEditingController();
+  final _randomSeedController = TextEditingController();
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   late ScaffoldMessengerState snackbar;
   Model? _model = Model.tiny;
+  bool _safePrompt = false;
 
   @override
   void initState() {
     super.initState();
     _prefs.then((SharedPreferences prefs) {
       _apiKeyController.text = prefs.getString('key') ?? "";
+      _model = Model.values.firstWhere(
+          (element) => element.name == (prefs.getString('model') ?? 'tiny'));
       _temperatureController.text =
           (prefs.getDouble('temperature') ?? 0.7).toString();
       _toppController.text = (prefs.getDouble('top_p') ?? 1).toString();
-      _model = Model.values.firstWhere(
-          (element) => element.name == (prefs.getString('model') ?? 'tiny'));
+      _maxTokensController.text = (prefs.getInt('max_tokens') ?? "").toString();
+      _randomSeedController.text =
+          (prefs.getInt('random_seed') ?? "").toString();
       setState(() {});
     });
   }
@@ -77,7 +98,7 @@ class _SettingsViewState extends State<SettingsView> {
               obscureText: true,
               decoration: InputDecoration(
                 border: const OutlineInputBorder(),
-                labelText: 'Enter your Mistral API key',
+                labelText: 'Mistral API key',
                 suffixIcon: InkWell(
                   child: const Icon(Icons.clear),
                   onTap: () {
@@ -157,7 +178,7 @@ class _SettingsViewState extends State<SettingsView> {
               maxLines: 1,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
-                labelText: 'Enter a temperature sampling',
+                labelText: 'Temperature sampling',
               ),
               validator: (String? value) {
                 if (value == null || value.trim().isEmpty) {
@@ -184,7 +205,7 @@ class _SettingsViewState extends State<SettingsView> {
               maxLines: 1,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
-                labelText: 'Enter a nucleus sampling',
+                labelText: 'Nucleus sampling',
               ),
               validator: (String? value) {
                 if (value == null || value.trim().isEmpty) {
@@ -198,6 +219,72 @@ class _SettingsViewState extends State<SettingsView> {
                 return null;
               },
             ),
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Divider(),
+            ),
+            TextFormField(
+              controller: _maxTokensController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))
+              ],
+              maxLines: 1,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Max tokens',
+              ),
+              validator: (String? value) {
+                if (value!.isNotEmpty &&
+                    (int.tryParse(value) == null || int.parse(value) <= 0)) {
+                  return 'Field should be > 0';
+                }
+                return null;
+              },
+            ),
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Divider(),
+            ),
+            Row(
+              children: [
+                const Text("Safe prompt",
+                    style: TextStyle(
+                      fontSize: 18,
+                    )),
+                Switch(
+                  value: _safePrompt,
+                  onChanged: (bool value) {
+                    setState(() {
+                      _safePrompt = value;
+                    });
+                  },
+                ),
+              ],
+            ),
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Divider(),
+            ),
+            TextFormField(
+              controller: _randomSeedController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))
+              ],
+              maxLines: 1,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Random seed',
+              ),
+              validator: (String? value) {
+                if (value!.isNotEmpty &&
+                    (int.tryParse(value) == null || int.parse(value) < 0)) {
+                  return 'Field should be >= 0';
+                }
+                return null;
+              },
+            ),
             Padding(
               padding: const EdgeInsets.only(top: 16),
               child: ElevatedButton(
@@ -205,11 +292,31 @@ class _SettingsViewState extends State<SettingsView> {
                   if (_formKey.currentState!.validate()) {
                     _prefs.then((SharedPreferences prefs) {
                       prefs.setString('key', _apiKeyController.text);
+
                       prefs.setDouble('temperature',
                           double.parse(_temperatureController.text));
+
                       prefs.setDouble(
                           'top_p', double.parse(_toppController.text));
+
                       prefs.setString('model', _model!.name);
+
+                      if (int.tryParse(_maxTokensController.text) != null) {
+                        prefs.setInt(
+                            'max_tokens', int.parse(_maxTokensController.text));
+                      } else {
+                        prefs.remove('max_tokens');
+                      }
+
+                      prefs.setBool('safe_prompt', _safePrompt);
+
+                      if (int.tryParse(_randomSeedController.text) != null) {
+                        prefs.setInt('random_seed',
+                            int.parse(_randomSeedController.text));
+                      } else {
+                        prefs.remove('random_seed');
+                      }
+
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Your settings have been saved'),
